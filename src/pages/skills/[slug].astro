@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { getCollection } from "astro:content";
+import { getCollection, render } from "astro:content";
 import type { GetStaticPaths } from "astro";
 
 export const getStaticPaths = (async () => {
@@ -8,71 +8,18 @@ export const getStaticPaths = (async () => {
   const projects = await getCollection("projects");
 
   return skills.map((skill) => ({
-    params: { slug: skill.data.slug },
+    // Use skill.id as the dynamic route parameter
+    params: { slug: skill.id },
     props: { skill, projects },
   }));
 }) satisfies GetStaticPaths;
 
 const { skill, projects } = Astro.props;
-const { name, description: _unused, tryhackmeBadges, relatedProjects } = skill.data;
-const { Content } = await skill.render();
+const { name, tryhackmeBadges, relatedProjects = [] } = skill.data;
 
-// Cross-reference relatedProjects slugs against the projects collection —
-// filtered here rather than hardcoded, so this stays correct as projects change.
-const linkedProjects = projects.filter((p) => relatedProjects.includes(p.slug));
+// Use the modern top-level render() function from astro:content
+const { Content } = await render(skill);
+
+// Cross-reference relatedProjects using the entry's .id property
+const linkedProjects = projects.filter((p) => relatedProjects.includes(p.id));
 ---
-
-<Layout title={name}>
-  <section class="mx-auto max-w-content px-6 py-16">
-    <a href="/skills" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink transition-colors">
-      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      All skills
-    </a>
-
-    <h1 class="text-3xl font-bold tracking-tight text-ink">{name}</h1>
-
-    <div class="mt-6 max-w-2xl space-y-4 leading-relaxed text-ink-muted">
-      <Content />
-    </div>
-
-    {tryhackmeBadges.length > 0 && (
-      <div class="mt-12">
-        <h2 class="mb-4 font-mono text-sm uppercase tracking-wide text-ink-faint">TryHackMe Badges</h2>
-        <div class="flex flex-wrap gap-4">
-          {tryhackmeBadges.map((badge) => (
-            <a
-              href={badge.link ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="group flex flex-col items-center gap-2 rounded-lg border border-base-border bg-base-surface p-4 transition-colors hover:border-accent/50"
-            >
-              <img src={badge.imageUrl} alt={badge.name} class="h-16 w-16 rounded object-cover" loading="lazy" />
-              <span class="text-xs text-ink-muted group-hover:text-ink transition-colors">{badge.name}</span>
-            </a>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {linkedProjects.length > 0 && (
-      <div class="mt-12">
-        <h2 class="mb-4 font-mono text-sm uppercase tracking-wide text-ink-faint">Related Projects</h2>
-        <ul class="space-y-3">
-          {linkedProjects.map((project) => (
-            <li>
-              <a
-                href={project.data.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 font-medium text-accent hover:text-ink transition-colors"
-              >
-                {project.data.title}
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </section>
-</Layout>
