@@ -65,7 +65,7 @@ const skills = defineCollection({
   type: "content",
   schema: z.object({
     name: z.string(),
-    slug: z.string(),
+    //slug: z.string(),
     shortDescription: z.string(),
     tryhackmeBadges: z
       .array(
