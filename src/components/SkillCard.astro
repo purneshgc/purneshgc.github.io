@@ -1,0 +1,22 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  skill: CollectionEntry<"skills">;
+}
+
+const { skill } = Astro.props;
+const { name, shortDescription, slug } = skill.data;
+---
+
+<a
+  href={`/skills/${slug}`}
+  class="group flex flex-col rounded-lg border border-base-border bg-base-surface p-6 transition-colors hover:border-accent/50"
+>
+  <h3 class="mb-2 text-lg font-semibold text-ink group-hover:text-accent transition-colors">{name}</h3>
+  <p class="flex-1 text-sm leading-relaxed text-ink-muted">{shortDescription}</p>
+  <span class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+    View details
+    <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </span>
+</a>

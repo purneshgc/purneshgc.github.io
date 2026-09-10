@@ -1,0 +1,109 @@
+---
+// Persistent header/nav shown on every page.
+// Replace the two placeholder URLs below with your real profiles.
+const GITHUB_URL = "https://github.com/YOUR_USERNAME";
+const LINKEDIN_URL = "https://linkedin.com/in/YOUR_USERNAME";
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/projects", label: "Projects" },
+  { href: "/skills", label: "Skills" },
+  { href: "/timeline", label: "Timeline" },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-50 border-b border-base-border/80 bg-base-bg/90 backdrop-blur supports-[backdrop-filter]:bg-base-bg/70 html:not(.dark):bg-light-surface/90">
+  <div class="mx-auto flex max-w-content items-center justify-between px-6 py-4">
+    <a href="/" class="font-mono text-sm font-semibold tracking-tight text-ink hover:text-accent transition-colors">
+      cd ~/portfolio
+    </a>
+
+    <nav class="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+      {navItems.map((item) => {
+        const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
+        return (
+          <a
+            href={item.href}
+            aria-current={isActive ? "page" : undefined}
+            class:list={[
+              "rounded px-3 py-2 text-sm font-medium transition-colors",
+              isActive
+                ? "text-accent"
+                : "text-ink-muted hover:text-ink",
+            ]}
+          >
+            {item.label}
+          </a>
+        );
+      })}
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <button
+        id="theme-toggle"
+        type="button"
+        aria-label="Toggle light and dark theme"
+        class="rounded p-2 text-ink-muted transition-colors hover:text-ink"
+      >
+        <svg id="icon-sun" class="hidden h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg id="icon-moon" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+
+      <a
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub profile (opens in new tab)"
+        class="text-ink-muted transition-colors hover:text-ink"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.79-.25.79-.55 0-.27-.01-1.15-.02-2.09-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.18 1.83 1.18 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.07.78 2.16 0 1.56-.01 2.82-.01 3.2 0 .3.21.66.8.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+      </a>
+
+      <a
+        href={LINKEDIN_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="LinkedIn profile (opens in new tab)"
+        class="text-ink-muted transition-colors hover:text-ink"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <nav class="flex items-center gap-1 overflow-x-auto border-t border-base-border/60 px-6 py-2 md:hidden" aria-label="Main navigation (mobile)">
+    {navItems.map((item) => (
+      <a href={item.href} class="whitespace-nowrap rounded px-3 py-1.5 text-sm font-medium text-ink-muted hover:text-ink">
+        {item.label}
+      </a>
+    ))}
+  </nav>
+</header>
+
+<script>
+  // Theme toggle: persists choice for the session via a class on <html>.
+  // No localStorage/sessionStorage dependency issues here since this is a
+  // plain static site (not a sandboxed artifact) — localStorage is safe here.
+  const root = document.documentElement;
+  const sun = document.getElementById("icon-sun");
+  const moon = document.getElementById("icon-moon");
+  const toggle = document.getElementById("theme-toggle");
+
+  function applyTheme(theme: string) {
+    root.classList.toggle("dark", theme === "dark");
+    sun?.classList.toggle("hidden", theme !== "dark");
+    moon?.classList.toggle("hidden", theme === "dark");
+  }
+
+  const stored = localStorage.getItem("theme");
+  const preferred = stored ?? "dark"; // dark by default, per design direction
+  applyTheme(preferred);
+
+  toggle?.addEventListener("click", () => {
+    const next = root.classList.contains("dark") ? "light" : "dark";
+    localStorage.setItem("theme", next);
+    applyTheme(next);
+  });
+</script>

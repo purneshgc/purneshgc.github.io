@@ -1,0 +1,92 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const projects = (await getCollection("projects")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const allSkillTags = [...new Set(projects.flatMap((p) => p.data.skills))].sort();
+---
+
+<Layout title="Projects">
+  <section class="mx-auto max-w-content px-6 py-16">
+    <h1 class="text-3xl font-bold tracking-tight text-ink">Projects</h1>
+    <p class="mt-2 max-w-xl text-ink-muted">Things I've built while learning — scripts, tools, and lab writeups.</p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-2" id="project-filters">
+      <button data-filter="all" data-filter-type="status" class="filter-btn is-active">All</button>
+      <button data-filter="completed" data-filter-type="status" class="filter-btn">Completed</button>
+      <button data-filter="in-progress" data-filter-type="status" class="filter-btn">In Progress</button>
+      <span class="mx-1 h-4 w-px bg-base-border"></span>
+      {allSkillTags.map((tag) => (
+        <button data-filter={tag} data-filter-type="skill" class="filter-btn">{tag}</button>
+      ))}
+    </div>
+
+    <div id="project-grid" class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <div data-status={project.data.status} data-skills={project.data.skills.join("|")}>
+          <ProjectCard project={project} />
+        </div>
+      ))}
+    </div>
+
+    <p id="no-results" class="mt-10 hidden text-center text-sm text-ink-faint">No projects match that filter.</p>
+  </section>
+</Layout>
+
+<style>
+  .filter-btn {
+    @apply rounded-full border border-base-border px-3 py-1.5 text-xs font-medium font-mono text-ink-muted transition-colors hover:text-ink;
+  }
+  .filter-btn.is-active {
+    @apply border-accent text-accent;
+  }
+</style>
+
+<script>
+  // Simple vanilla-JS filtering: status filter and skill filter combine (AND).
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const cards = document.querySelectorAll<HTMLElement>("#project-grid > div");
+  const noResults = document.getElementById("no-results");
+
+  let activeStatus = "all";
+  let activeSkill: string | null = null;
+
+  function applyFilters() {
+    let visibleCount = 0;
+    cards.forEach((card) => {
+      const status = card.dataset.status;
+      const skills = (card.dataset.skills ?? "").split("|");
+      const statusMatch = activeStatus === "all" || status === activeStatus;
+      const skillMatch = !activeSkill || skills.includes(activeSkill);
+      const visible = statusMatch && skillMatch;
+      card.classList.toggle("hidden", !visible);
+      if (visible) visibleCount++;
+    });
+    noResults?.classList.toggle("hidden", visibleCount !== 0);
+  }
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.filterType;
+      const value = btn.dataset.filter!;
+
+      if (type === "status") {
+        activeStatus = value;
+        buttons.forEach((b) => {
+          if (b.dataset.filterType === "status") b.classList.toggle("is-active", b === btn);
+        });
+      } else if (type === "skill") {
+        const isSame = activeSkill === value;
+        activeSkill = isSame ? null : value;
+        buttons.forEach((b) => {
+          if (b.dataset.filterType === "skill") b.classList.toggle("is-active", !isSame && b === btn);
+        });
+      }
+      applyFilters();
+    });
+  });
+</script>

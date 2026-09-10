@@ -1,0 +1,88 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const entries = (await getCollection("timeline")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const monthYear = (d: Date) => d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const dayLabel = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+// Group entries by "Month Year" while preserving descending order (newest first).
+type Group = { label: string; items: typeof entries };
+const groups: Group[] = [];
+for (const entry of entries) {
+  const label = monthYear(entry.data.date);
+  const last = groups[groups.length - 1];
+  if (last && last.label === label) {
+    last.items.push(entry);
+  } else {
+    groups.push({ label, items: [entry] });
+  }
+}
+
+// ISO week number, used to detect week boundaries within a month for spacing.
+function isoWeek(d: Date) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+---
+
+<Layout title="Timeline">
+  <section class="mx-auto max-w-content px-6 py-16">
+    <h1 class="text-3xl font-bold tracking-tight text-ink">Learning Log</h1>
+    <p class="mt-2 max-w-xl text-ink-muted">A running record of rooms, projects, and milestones — newest first.</p>
+
+    <div class="mt-12 space-y-14">
+      {groups.map((group) => (
+        <div>
+          <h2 class="sticky top-[73px] z-10 mb-6 -mx-2 inline-block rounded bg-base-bg/90 px-2 py-1 font-mono text-sm font-semibold uppercase tracking-wide text-accent backdrop-blur">
+            {group.label}
+          </h2>
+
+          <ol class="relative ml-2 border-l border-base-border pl-8">
+            {group.items.map((entry, i) => {
+              const prevWeek = i > 0 ? isoWeek(group.items[i - 1].data.date) : null;
+              const thisWeek = isoWeek(entry.data.date);
+              const newWeek = prevWeek !== null && thisWeek !== prevWeek;
+              return (
+                <li class:list={["relative pb-8 last:pb-0", newWeek && "mt-4 border-t border-dashed border-base-border/60 pt-8"]}>
+                  <span class="absolute -left-[2.28rem] top-1 h-2.5 w-2.5 rounded-full border-2 border-accent bg-base-bg"></span>
+                  <time class="font-mono text-xs text-ink-faint" datetime={entry.data.date.toISOString()}>
+                    {dayLabel(entry.data.date)}
+                  </time>
+                  <h3 class="mt-1 text-base font-semibold text-ink">{entry.data.title}</h3>
+                  <p class="mt-1 max-w-xl text-sm leading-relaxed text-ink-muted">{entry.data.summary}</p>
+
+                  {entry.data.tags.length > 0 && (
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                      {entry.data.tags.map((tag: string) => (
+                        <span class="rounded border border-base-border px-1.5 py-0.5 text-[11px] font-mono text-ink-faint">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {entry.data.link && (
+                    <a
+                      href={entry.data.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-ink transition-colors"
+                    >
+                      View room/post
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ))}
+    </div>
+  </section>
+</Layout>
