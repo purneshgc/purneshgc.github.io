@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
+import { badges } from "../data/badges";
 
 const projects = await getCollection("projects");
 const skills = await getCollection("skills");
@@ -9,7 +10,7 @@ const aboutEntries = await getCollection("about");
 const about = aboutEntries[0];
 const { Content } = about ? await about.render() : { Content: null };
 
-const thmBadgeCount = skills.reduce((sum, s) => sum + s.data.tryhackmeBadges.length, 0);
+const thmBadgeCount = badges.length;
 
 const stats = [
   { label: "Projects", value: projects.length },
