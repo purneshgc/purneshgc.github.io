@@ -1,14 +1,8 @@
 ---
 name: "Network Security"
-slug: "network-security"
+
 shortDescription: "Subnetting, packet analysis, firewalls, and securing network infrastructure."
-tryhackmeBadges:
-  - name: "Network Fundamentals"
-    imageUrl: "https://tryhackme-badges.s3.amazonaws.com/example-network-fundamentals.png"
-    link: "https://tryhackme.com/room/networkfundamentals"
-  - name: "Nmap"
-    imageUrl: "https://tryhackme-badges.s3.amazonaws.com/example-nmap.png"
-    link: "https://tryhackme.com/room/furthernmap"
+
 relatedProjects: ["subnet-calculator", "ad-lab-notes"]
 ---
 

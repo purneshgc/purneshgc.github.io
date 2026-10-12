@@ -2,17 +2,66 @@
 import Layout from "../../layouts/Layout.astro";
 import SkillCard from "../../components/SkillCard.astro";
 import { getCollection } from "astro:content";
+import { badges } from "../../data/badges";
 
 const skills = (await getCollection("skills")).sort((a, b) => a.data.name.localeCompare(b.data.name));
+
+// Makes /public image paths work even when the site has a base path (GitHub Pages project sites).
+const withBase = (p: string) =>
+  import.meta.env.BASE_URL.replace(/\/$/, "") + "/" + p.replace(/^\//, "");
+
+// Pill colors per rarity: blue for common, green for rare.
+const rarityStyles = {
+  common: { label: "Common", classes: "bg-[#2b3558] text-[#7c9bff]" },
+  rare: { label: "Rare", classes: "bg-[#2a4030] text-[#5cc84d]" },
+};
 ---
 
 <Layout title="Skills">
   <section class="mx-auto max-w-content px-6 py-16">
     <h1 class="text-3xl font-bold tracking-tight text-ink">Skills</h1>
-    <p class="mt-2 max-w-xl text-ink-muted">Areas I'm actively building. Click one to see related badges and projects.</p>
+    <p class="mt-2 max-w-xl text-ink-muted">Areas I'm actively building. Click one to see related writeups and projects.</p>
 
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {skills.map((skill) => <SkillCard skill={skill} />)}
     </div>
+
+    {badges.length > 0 && (
+      <div class="mt-20">
+        <h2 class="text-2xl font-bold tracking-tight text-ink">TryHackMe Badges</h2>
+        <p class="mt-2 max-w-xl text-ink-muted">Badges I've earned on TryHackMe. Click one to view it.</p>
+
+        <ul class="mt-8 grid gap-6 md:grid-cols-2">
+          {badges.map((badge) => {
+            const rarity = rarityStyles[badge.rarity];
+            return (
+              <li>
+                <a
+                  href={badge.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${badge.name} badge on TryHackMe (opens in new tab)`}
+                  class="group flex h-full items-center gap-5 rounded-xl border border-base-border bg-base-surface p-5 transition-colors hover:border-accent/50"
+                >
+                  <img
+                    src={withBase(badge.image)}
+                    alt=""
+                    loading="lazy"
+                    class="h-24 w-24 shrink-0 object-contain transition-transform group-hover:scale-105"
+                  />
+                  <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-ink">{badge.name}</h3>
+                    <p class="mt-1 text-sm leading-relaxed text-ink-muted">{badge.description}</p>
+                    <span class:list={["mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium", rarity.classes]}>
+                      {rarity.label}: {badge.percent}%
+                    </span>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    )}
   </section>
 </Layout>

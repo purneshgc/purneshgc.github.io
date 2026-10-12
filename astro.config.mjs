@@ -14,8 +14,8 @@ import mdx from "@astrojs/mdx";
 //   base: "/<repo>"
 // ─────────────────────────────────────────────────────────────────────────
 export default defineConfig({
-  site: "https://github.io",
-  //base: "/purneshgc.github.io", // set to "/" if this is a <username>.github.io user site
+  site: "https://purneshgc.github.io",
+  //base: "/purneshgc", // set to "/" if this is a <username>.github.io user site
   output: "static",
   integrations: [tailwind(), mdx()],
 });

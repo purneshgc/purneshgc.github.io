@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+
+interface Props {
+  // Slug of the writeup currently being viewed, so we can skip it in "Recently Updated".
+  currentSlug?: string;
+}
+
+const { currentSlug } = Astro.props;
+
+const all = (await getCollection("writeups", ({ data }) => !data.draft))
+  .filter((w) => w.data.date instanceof Date && !isNaN(w.data.date.valueOf()))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const recent = all.filter((w) => w.slug !== currentSlug).slice(0, 5);
+
+// Count tag frequency across all writeups to build a simple "trending" list.
+const tagCounts = new Map<string, number>();
+for (const w of all) {
+  for (const tag of w.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const trendingTags = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([tag]) => tag);
+---
+
+<aside class="space-y-10">
+  <div>
+    <h2 class="mb-4 text-sm font-semibold text-ink">Recently Updated</h2>
+    <ul class="space-y-3">
+      {recent.map((w) => (
+        <li>
+          <a href={`/writeups/${w.slug}`} class="text-sm text-ink-muted hover:text-accent transition-colors">
+            {w.data.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  {trendingTags.length > 0 && (
+    <div>
+      <h2 class="mb-4 text-sm font-semibold text-ink">Trending Tags</h2>
+      <div class="flex flex-wrap gap-2">
+        {trendingTags.map((tag) => (
+          <a
+            href={`/writeups?tag=${encodeURIComponent(tag)}`}
+            class="rounded-full border border-base-border px-3 py-1 text-xs font-mono text-ink-muted transition-colors hover:border-accent/50 hover:text-accent"
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+    </div>
+  )}
+</aside>

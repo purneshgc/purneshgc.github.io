@@ -1,0 +1,85 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import WriteupCard from "../../components/WriteupCard.astro";
+import WriteupSidebar from "../../components/WriteupSidebar.astro";
+import { getCollection } from "astro:content";
+
+// Drafts (draft: true in frontmatter) are excluded from the public listing.
+// Entries with a missing/unparseable `date` are skipped (with a console
+// warning) rather than crashing the whole page.
+const allWriteups = await getCollection("writeups", ({ data }) => !data.draft);
+const writeups = allWriteups
+  .filter((w) => {
+    const ok = w.data.date instanceof Date && !isNaN(w.data.date.valueOf());
+    if (!ok) console.warn(`[writeups] "${w.slug}" has a missing or invalid "date" field — skipping it. Check its frontmatter.`);
+    return ok;
+  })
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Layout title="Writeups" description="TryHackMe room writeups and lab walkthroughs.">
+  <section class="mx-auto grid max-w-content gap-10 px-6 py-16 lg:grid-cols-[1fr_260px]">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-ink">Writeups</h1>
+      <p class="mt-2 max-w-xl text-ink-muted">Walkthroughs of TryHackMe rooms and labs I've solved, most recent first.</p>
+
+      <div id="active-filter" class="mt-6 hidden items-center gap-2 text-sm">
+        <span class="text-ink-muted">Filtering by</span>
+        <span id="active-filter-tag" class="rounded-full border border-accent px-3 py-1 font-mono text-accent"></span>
+        <button id="clear-filter" class="text-ink-faint underline hover:text-ink">clear</button>
+      </div>
+
+      <div id="writeup-list" class="mt-8 flex flex-col gap-5">
+        {writeups.map((writeup) => (
+          <div data-tags={writeup.data.tags.join("|")}>
+            <WriteupCard writeup={writeup} />
+          </div>
+        ))}
+      </div>
+
+      <p id="no-results" class="mt-10 hidden text-center text-sm text-ink-faint">No writeups tagged with that.</p>
+    </div>
+
+    <WriteupSidebar />
+  </section>
+</Layout>
+
+<script>
+  // Reads a ?tag=... query param (set by clicking a tag on the sidebar or a
+  // writeup detail page) and filters the list client-side — keeps the whole
+  // site static with no server-side routing needed for tag filters.
+  const params = new URLSearchParams(window.location.search);
+  const tag = params.get("tag");
+
+  const items = document.querySelectorAll<HTMLElement>("#writeup-list > div");
+  const noResults = document.getElementById("no-results");
+  const activeFilter = document.getElementById("active-filter");
+  const activeFilterTag = document.getElementById("active-filter-tag");
+  const clearBtn = document.getElementById("clear-filter");
+
+  function applyFilter(activeTag: string | null) {
+    let visible = 0;
+    items.forEach((item) => {
+      const tags = (item.dataset.tags ?? "").split("|");
+      const match = !activeTag || tags.includes(activeTag);
+      item.classList.toggle("hidden", !match);
+      if (match) visible++;
+    });
+    noResults?.classList.toggle("hidden", visible !== 0);
+
+    if (activeTag) {
+      activeFilter?.classList.remove("hidden");
+      activeFilter?.classList.add("flex");
+      if (activeFilterTag) activeFilterTag.textContent = activeTag;
+    } else {
+      activeFilter?.classList.add("hidden");
+    }
+  }
+
+  applyFilter(tag);
+
+  clearBtn?.addEventListener("click", () => {
+    history.replaceState(null, "", window.location.pathname);
+    applyFilter(null);
+  });
+</script>

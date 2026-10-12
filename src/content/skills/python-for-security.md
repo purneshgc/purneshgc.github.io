@@ -1,8 +1,8 @@
 ---
 name: "Python for Security"
-slug: "python-for-security"
+
 shortDescription: "Writing scripts and small tools to automate recon, parsing, and analysis tasks."
-tryhackmeBadges: []
+
 relatedProjects: ["subnet-calculator", "log-anomaly-scanner"]
 ---
 

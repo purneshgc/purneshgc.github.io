@@ -1,0 +1,44 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  writeup: CollectionEntry<"writeups">;
+}
+
+const { writeup } = Astro.props;
+const { title, date, summary, tags, image, platform } = writeup.data;
+
+const dateLabel = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+---
+
+<a
+  href={`/writeups/${writeup.slug}`}
+  class="group flex flex-col overflow-hidden rounded-lg border border-base-border bg-base-surface transition-colors hover:border-accent/50 sm:flex-row"
+>
+  <div class="flex h-40 w-full shrink-0 items-center justify-center bg-base-surface2 sm:h-auto sm:w-48">
+    {image ? (
+      <img src={image} alt="" class="h-full w-full object-cover" loading="lazy" />
+    ) : (
+      <svg class="h-10 w-10 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+    )}
+  </div>
+
+  <div class="flex flex-1 flex-col p-5">
+    <h3 class="text-lg font-semibold text-ink group-hover:text-accent transition-colors">{title}</h3>
+    <p class="mt-2 flex-1 text-sm leading-relaxed text-ink-muted line-clamp-2">{summary}</p>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-ink-faint">
+      <span class="inline-flex items-center gap-1.5 font-mono">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        {dateLabel}
+      </span>
+      <span class="inline-flex items-center gap-1.5 font-mono">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M20 12H9M20 17H9M4 7h.01M4 12h.01M4 17h.01"/></svg>
+        {platform}
+      </span>
+      {tags.slice(0, 1).map((tag: string) => (
+        <span class="rounded border border-base-border px-2 py-0.5 font-mono text-accent">{tag}</span>
+      ))}
+    </div>
+  </div>
+</a>

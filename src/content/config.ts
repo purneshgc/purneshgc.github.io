@@ -65,7 +65,7 @@ const skills = defineCollection({
   type: "content",
   schema: z.object({
     name: z.string(),
-    //slug: z.string(),
+    // slug line removed
     shortDescription: z.string(),
     tryhackmeBadges: z
       .array(
@@ -76,11 +76,10 @@ const skills = defineCollection({
         })
       )
       .default([]),
-    // Slugs (filenames without .md) of entries in the "projects" collection.
     relatedProjects: z.array(z.string()).default([]),
+    writeupTags: z.array(z.string()).default([]),
   }),
 });
-
 /**
  * TIMELINE COLLECTION
  * One markdown file per learning-log entry in src/content/timeline/.
@@ -103,6 +102,39 @@ const timeline = defineCollection({
     summary: z.string(),
     link: z.string().url().optional(),
     tags: z.array(z.string()).default([]),
+  }),
+});
+
+/**
+ * WRITEUPS COLLECTION
+ * One markdown file per writeup in src/content/writeups/.
+ * Copy this frontmatter template into a new file to add a writeup:
+ *
+ * ---
+ * title: "Writeup: My First TryHackMe Room"
+ * date: 2026-09-10
+ * summary: "A brief summary of the writeup."
+ * platform: "TryHackMe"   # optional
+ * tags: ["tryhackme", "web"]                        # optional
+ * image: "path/to/image.png"                        # optional
+ * roomUrl: "https://tryhackme.com/room/myfirstroom"  # optional
+ * difficulty: "Medium"                               # optional
+ * draft: false                                       # optional
+ * ---
+ */
+
+const writeups = defineCollection({
+  type: "content",
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date(),
+    summary: z.string(),
+    platform: z.string().default("TryHackMe"),
+    tags: z.array(z.string()).default([]),
+    image: z.string().optional(),
+    roomUrl: z.string().url().optional(),
+    difficulty: z.enum(["Easy", "Medium", "Hard", "Insane"]).optional(),
+    draft: z.boolean().default(false),
   }),
 });
 

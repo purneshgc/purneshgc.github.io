@@ -6,7 +6,8 @@ interface Props {
 }
 
 const { skill } = Astro.props;
-const { name, shortDescription, slug } = skill.data;
+const { name, shortDescription } = skill.data;
+const slug = skill.slug;
 ---
 
 <a

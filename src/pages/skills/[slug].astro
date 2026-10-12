@@ -1,25 +1,118 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { getCollection, render } from "astro:content";
+import { getCollection } from "astro:content";
 import type { GetStaticPaths } from "astro";
 
 export const getStaticPaths = (async () => {
   const skills = await getCollection("skills");
   const projects = await getCollection("projects");
+  const writeups = await getCollection("writeups", ({ data }) => !data.draft);
 
   return skills.map((skill) => ({
-    // Use skill.id as the dynamic route parameter
-    params: { slug: skill.id },
-    props: { skill, projects },
+    params: { slug: skill.slug },
+    props: { skill, projects, writeups },
   }));
 }) satisfies GetStaticPaths;
 
-const { skill, projects } = Astro.props;
-const { name, tryhackmeBadges, relatedProjects = [] } = skill.data;
+const { skill, projects, writeups } = Astro.props;
+const { name, tryhackmeBadges, relatedProjects, writeupTags } = skill.data;
+const { Content } = await skill.render();
 
-// Use the modern top-level render() function from astro:content
-const { Content } = await render(skill);
+// Projects linked by filename (unchanged from before).
+const linkedProjects = projects.filter((p) => relatedProjects.includes(p.slug));
 
-// Cross-reference relatedProjects using the entry's .id property
-const linkedProjects = projects.filter((p) => relatedProjects.includes(p.id));
+// Writeups that share at least one tag with this skill (case-insensitive), newest first.
+const wanted = writeupTags.map((t) => t.toLowerCase());
+const linkedWriteups = writeups
+  .filter((w) => w.data.tags.some((t: string) => wanted.includes(t.toLowerCase())))
+  .filter((w) => w.data.date instanceof Date && !isNaN(w.data.date.valueOf()))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const dateLabel = (d: Date) =>
+  d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 ---
+
+<Layout title={name}>
+  <section class="mx-auto max-w-content px-6 py-16">
+    <a href="/skills" class="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink">
+      <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      All skills
+    </a>
+
+    <h1 class="text-3xl font-bold tracking-tight text-ink">{name}</h1>
+
+    <div class="mt-6 max-w-2xl space-y-4 leading-relaxed text-ink-muted">
+      <Content />
+    </div>
+
+    <div class="mt-12">
+      <h2 class="mb-4 font-mono text-sm uppercase tracking-wide text-ink-faint">Writeups</h2>
+      {linkedWriteups.length > 0 ? (
+        <ul class="max-w-3xl space-y-3">
+          {linkedWriteups.map((w) => (
+            <li>
+              <a
+                href={`/writeups/${w.slug}`}
+                class="group block rounded-lg border border-base-border bg-base-surface p-4 transition-colors hover:border-accent/50"
+              >
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <span class="font-medium text-accent group-hover:underline underline-offset-4">{w.data.title}</span>
+                  <span class="font-mono text-xs text-ink-faint">{dateLabel(w.data.date)}</span>
+                </div>
+                {w.data.tags.length > 0 && (
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    {w.data.tags.map((tag: string) => (
+                      <span class="rounded border border-base-border px-1.5 py-0.5 font-mono text-[11px] text-ink-faint">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-sm text-ink-faint">No writeups for this skill yet.</p>
+      )}
+    </div>
+
+    {tryhackmeBadges.length > 0 && (
+      <div class="mt-12">
+        <h2 class="mb-4 font-mono text-sm uppercase tracking-wide text-ink-faint">TryHackMe Badges</h2>
+        <div class="flex flex-wrap gap-4">
+          {tryhackmeBadges.map((badge) => (
+            <a
+              href={badge.link ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex flex-col items-center gap-2 rounded-lg border border-base-border bg-base-surface p-4 transition-colors hover:border-accent/50"
+            >
+              <img src={badge.imageUrl} alt={badge.name} class="h-16 w-16 rounded object-cover" loading="lazy" />
+              <span class="text-xs text-ink-muted transition-colors group-hover:text-ink">{badge.name}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {linkedProjects.length > 0 && (
+      <div class="mt-12">
+        <h2 class="mb-4 font-mono text-sm uppercase tracking-wide text-ink-faint">Related Projects</h2>
+        <ul class="space-y-3">
+          {linkedProjects.map((project) => (
+            <li>
+              <a
+                href={project.data.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 font-medium text-accent transition-colors hover:text-ink"
+              >
+                {project.data.title}
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+</Layout>
